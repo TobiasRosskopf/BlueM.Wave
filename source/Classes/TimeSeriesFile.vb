@@ -47,6 +47,8 @@ Public MustInherit Class TimeSeriesFile
         SWMM_OUT
         SYDROSQLITE
         TEN
+        UNRUNOFF_FORT14
+        UNRUNOFF_FORT15
         UVF
         WBL
         WEL
@@ -64,6 +66,8 @@ Public MustInherit Class TimeSeriesFile
     ''' which would be a Module in VB, but that cannot be nested, and would mess up the namespace.
     ''' </remarks>
     Public MustInherit Class FileExtensions
+        Public Shared ReadOnly URO14 As String = ".14"  'UnRunOff fort.14 file
+        Public Shared ReadOnly URO15 As String = ".15"  'UnRunOff fort.15 file
         Public Shared ReadOnly ASC As String = ".ASC"
         Public Shared ReadOnly BCS As String = ".BCS"   'BGS HYBNAT BCS format
         Public Shared ReadOnly BIN As String = ".BIN"   'SYDRO binary format
@@ -106,6 +110,7 @@ Public MustInherit Class TimeSeriesFile
         "SYDRO binary files (*.bin)|*.bin|" &
         "SYDRO binary wel files (*.wbl)|*.wbl|" &
         "SYDRO SQLite files (*.db)|*.db|" &
+        "UnRunOff files (*.14, *.15)|*.14;*.15|" &
         "UVF files (*.uvf)|*.uvf|" &
         "WEL files (*.wel, *.kwl)|*.wel;*.kwl|" &
         "Wave project files (*.wvp)|*.wvp|" &
@@ -562,6 +567,10 @@ Public MustInherit Class TimeSeriesFile
                 Return FileExtensions.DB
             Case FileTypes.TEN
                 Return FileExtensions.TEN
+            Case FileTypes.UNRUNOFF_FORT14
+                Return FileExtensions.URO14
+            Case FileTypes.UNRUNOFF_FORT15
+                Return FileExtensions.URO15
             Case FileTypes.UVF
                 Return FileExtensions.UVF
             Case FileTypes.WBL
@@ -739,6 +748,15 @@ Public MustInherit Class TimeSeriesFile
                     fileType = FileTypes.SWMM_INTERFACE
                 End If
 
+            Case FileExtensions.URO14
+                'UnRunOff result file
+                Log.AddLogEntry(levels.info, $"Assuming UnRunOff (fort.14) result format for file {fileName}.")
+                fileType = FileTypes.UNRUNOFF_FORT14
+            Case FileExtensions.URO15
+                'UnRunOff result file
+                Log.AddLogEntry(levels.info, $"Assuming UnRunOff (fort.15) result format for file {fileName}.")
+                fileType = FileTypes.UNRUNOFF_FORT15
+
             Case FileExtensions.UVF
                 'Check file format
                 If Fileformats.UVF.verifyFormat(file) Then
@@ -861,6 +879,10 @@ Public MustInherit Class TimeSeriesFile
                 FileInstance = New Fileformats.SydroSQLite(file)
             Case FileTypes.TEN
                 Throw New Exception("Native TeeChart files (TEN) must to be loaded using `Wave.Import_File()`!")
+            'Case FileTypes.UNRUNOFF_FORT14
+            '    FileInstance = New Fileformats.UnRunOff_fort14(file)
+            Case FileTypes.UNRUNOFF_FORT15
+                FileInstance = New Fileformats.UnRunOff_fort15(file)
             Case FileTypes.UVF
                 FileInstance = New Fileformats.UVF(file)
             Case FileTypes.WBL
